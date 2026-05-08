@@ -1,6 +1,8 @@
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)]()
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/dindagustiayu/Equations-of-Motion-of-Harmonic-Oscillator/blob/main/Second%20ODE%20in%20Quantum%20Oscillator.html)
 
-# Second Order Differential Equations
+# Harmonic Oscillators are Everywhere
+
+## Second Order Differential Equations
 
 In this unit, we move from first-order differential equations to __second-order differential equations__, that is, differential equations involving a second (but no higher) derivative. Examples of such equations are
 
@@ -51,3 +53,76 @@ This equation may be decomposed into two first-order equations as follows:
 </p>
 
 where $x_1$ is identified with $x$ and $x_2$ with $dx/dt$.
+This units develops systematic techniques to solve equations like this. For the moment, we will simply guess the solution and check that it works. We know that,
+
+<p align='center'>
+    $$\begin{align} \frac{d}{dt} (\sin \ t) &= \cos \ t \quad \mbox{and} \quad \frac{d}{dt} (\cos \ t) = - \sin \ t, \\ \frac{d^2}{dt^2} (\sin \ t) &= - \sin \ t \quad \mbox{and} \quad \frac{d^2}{dt^2} (\cos \ t) = - \cos \ t \end{align}$$ 
+</p>
+
+In other words, taking the second derivative of a sine or cosine function gives the same function back again.
+
+## Preliminaries
+`solve_ivp` function is a simplified interface to the more advanced `scipy.integrate` method which provides a range of different numerical integrators, including Runge-Kutta algorithms and support for complex-valued variables.
+
+---
+The following code performs solution of the harmonic oscillator equation of motion using `scipy.integrate.solve_ivp` and compares the result with the numerical approach.
+
+```Python
+import numpy as np
+from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
+
+# Mass (kg), force constant (N.m-1)
+m, k = 1, 2
+omega = np.sqrt(k / m)
+
+# Harmonic oscillator initial condition (position, m, and velocity, m.s-1)
+x0 = 0.01, 0
+
+# Initial and final time points for the integration (s)
+t0, tf = 0, 10
+
+# Return dx1/dt and dx2/dt = dx1^2/dt^2 time (t)
+def derivative(t, x, omega):
+    x1, x2 = x
+    dx1dt = x2
+    dx2dt = -omega**2 * x1
+    return dx1dt, dx2dt
+
+# Integrate the differential equation (Numerical solution)
+soln = solve_ivp(derivative, (t0, tf), x0, args=(omega,), dense_output=True)
+print(soln.message)
+
+t = np.linspace(t0, tf, 200)
+x, v = soln.sol(t)
+
+# Solution for exact analytical solution
+x_exact = x0[0] * np.cos(omega * t)
+v_exact = -x0[0] * omega * np.sin(omega * t)
+
+# Plot and compare the numerical and exact solutions
+plt.plot(t, x_exact, '-k', label=r'$\mathrm{x-exact}$')
+plt.plot(t, v_exact, 'black', label= r'$\mathrm{v-exact}$')
+plt.plot(t, x, 'o', markevery= 3, label=r'$x$')
+plt.plot(t, v, 'D', markevery= 3, color='gray', label=r'$v$')
+plt.xlabel(r'$t/s$')
+plt.ylabel(r'$x \ / \ \mathrm{m}, \ v \ / \ \mathrm{m} \ s^{-1}$')
+plt.legend()
+plt.title('Numerical Integration vs Exact calculation of QHO')
+plt.savefig('Numerical Integration vs Exact calculation of QHO.svg', bbox_inches='tight')
+plt.show()
+```
+The solver successfully reached the end of the integration interval.
+<div align='center'>
+<img src="Numerical Integration vs Exact calculation of QHO.svg">
+</div>
+
+<p align='center'>
+Figure 1. Numerical and exact solutions to the harmonic oscillator ODE for a mass, $m$ = 1 kg and force constant $k = 2 \ N \ m^{-1}$ with initial conditions $x(0)=1$ cm and $v(0)=0$.
+</p>
+
+
+## Conclusion
+- Harmonic oscillators play a central role in physics and its applications. If a system performs small oscillations about an equilibrium point, then it is generally a good approximation to model it as a harmonic oscillator.
+- It should come as no surprise that to-and-fro motion of a pendulum clock can be modelled by a harmonic oscillator. On a smaller scale, vibrating molecules and vibrating crystals are also modelled as harmonic oscillators.
+
